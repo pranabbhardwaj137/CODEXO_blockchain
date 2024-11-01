@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diamante Blockchain Text Storage</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
+</head>
+<body class="bg-gray-50">
+
+<div class="max-w-2xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-lg">
+    <h1 class="text-2xl font-bold mb-6">Diamante Blockchain Text Storage</h1>
+    
+    <!-- Store Text Form -->
+    <div class="mb-6">
+        <h2 class="text-lg font-semibold">Store Text Data</h2>
+        <form id="storeTextForm" class="space-y-4">
+            <div>
+                <label for="senderSecret" class="block text-sm font-medium text-gray-700">Sender Secret</label>
+                <input type="text" id="senderSecret" class="mt-1 p-2 w-full border rounded" required>
+            </div>
+            <div>
+                <label for="senderPublic" class="block text-sm font-medium text-gray-700">Sender Public Key</label>
+                <input type="text" id="senderPublic" class="mt-1 p-2 w-full border rounded" required>
+            </div>
+            <div>
+                <label for="key" class="block text-sm font-medium text-gray-700">Key</label>
+                <input type="text" id="key" class="mt-1 p-2 w-full border rounded" required>
+            </div>
+            <div>
+                <label for="text" class="block text-sm font-medium text-gray-700">Text</label>
+                <textarea id="text" class="mt-1 p-2 w-full border rounded" required></textarea>
+            </div>
+            <button type="button" onclick="storeText()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Store Text</button>
+            <p id="storeResult" class="mt-4 text-green-500 font-semibold"></p>
+        </form>
+    </div>
+
+    <!-- Ledger Display -->
+    <div class="mt-8">
+        <h2 class="text-lg font-semibold">Ledger</h2>
+        <button type="button" onclick="fetchLedger()" class="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600">Show Ledger</button>
+        <div id="ledgerDisplay" class="mt-4 border rounded p-4 bg-gray-100"></div>
+    </div>
+</div>
+
+<script>
+    async function storeText() {
+        const senderSecret = document.getElementById('senderSecret').value;
+        const senderPublic = document.getElementById('senderPublic').value;
+        const key = document.getElementById('key').value;
+        const text = document.getElementById('text').value;
+
+        try {
+            const response = await fetch('http://localhost:3001/store-text', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ senderSecret, senderPublic, key, text })
+            });
+            const result = await response.json();
+            document.getElementById('storeResult').textContent = result.message || "Text data stored successfully!";
+        } catch (error) {
+            document.getElementById('storeResult').textContent = "Error storing text data: " + error.message;
+        }
+    }
+
+    async function fetchLedger() {
+        try {
+            const response = await fetch('http://localhost:3001/ledger');
+            const ledger = await response.json();
+            const ledgerDisplay = document.getElementById('ledgerDisplay');
+            ledgerDisplay.innerHTML = ''; // Clear previous display
+
+            if (ledger.length === 0) {
+                ledgerDisplay.textContent = 'The ledger is empty.';
+                return;
+            }
+
+            // Create a list of entries
+            ledger.forEach(entry => {
+                const entryDiv = document.createElement('div');
+                entryDiv.textContent = `Public Key: ${entry.senderPublic}, Key: ${entry.key}, Text: ${entry.text}, Timestamp: ${entry.timestamp}`;
+                ledgerDisplay.appendChild(entryDiv);
+            });
+        } catch (error) {
+            console.error('Error fetching ledger:', error);
+            document.getElementById('ledgerDisplay').textContent = 'Error fetching ledger: ' + error.message;
+        }
+    }
+</script>
+</body>
+</html>
